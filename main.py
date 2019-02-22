@@ -13,7 +13,15 @@ if len(sys.argv) < 2:
 else:
     log_file = sys.argv[1]
 
+
+line_nr = 0
+
 dest_files = "result" if len(sys.argv) < 3 else sys.argv[2]
+
+def read_line(file):
+    global line_nr
+    line_nr = line_nr + 1
+    return file.readline()
 
 
 def wiztree_internal(filename, size, allocated, modified, attributes, files, folders):
@@ -94,9 +102,8 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
 
     print("{} log file detected".format(configuration))
 
-
     def get_line():
-        line = file.readline()
+        line = read_line(file)
         assert line.startswith(prefix), "{} does not start with {}".format(line, prefix)
         return line[len(prefix):]
 
@@ -127,7 +134,7 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
 
 
     def parse_count():
-        return parse_int("Count:")
+        return try_parse_int("Count:")
 
 
     def parse_total():
@@ -140,7 +147,7 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
 
     def parse_empty():
         empty = get_line().strip()
-        assert empty == "", empty
+        assert empty == "", "[{}] {}".format(line_nr, empty)
 
 
     def parse_top():
@@ -247,10 +254,11 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
         if count > 0:
             tree = parse_tree(count, current_file, getname)
 
-            parse_empty()
+            try_parse_empty()
 
             for _ in range(parse_top()):
-                file.readline()
+                line = read_line(file)
+
         parse_empty()
         total = parse_total()
         if tree is not None:
@@ -259,9 +267,9 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
 
 
     while True:
-        line = file.readline()
+        line = read_line(file)
         if len(line) == 0:
-            assert len(file.readline()) == 0
+            assert len(read_line(file)) == 0
             break
 
         if not line.startswith(prefix):
@@ -315,7 +323,7 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
         functions_tree = parse_section(current_file)
         print("    Functions parsed!")
 
-        parse_beginstring("time(")
+        #parse_beginstring("time(")
 
         if try_parse_string("Code Generation Summary"):
             parse_int("Total Function Count:")
@@ -343,7 +351,7 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
             while not try_parse_empty():
                 get_line()
 
-        parse_beginstring("time(")
+        #parse_beginstring("time(")
 
         map[current_file] = includes_tree, classes_tree, functions_tree
 
