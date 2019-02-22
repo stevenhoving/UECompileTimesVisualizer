@@ -277,13 +277,14 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
                 print("Skipping line " + line)
                 continue
 
-        extension = ""
+        extension = None
         for ext in [".h", ".cpp", ".rc", ".lib", ".dll", ".exe"]:
             if ext in line:
                 extension = ext
                 break
-        else:
-            assert False, "Invalid file name: " + line
+
+        if extension is None:
+            continue
 
         if configuration == "Unreal":
             line = line.split("]")[1]
@@ -291,7 +292,7 @@ with open(log_file, "r", encoding="utf-8-sig") as file:
         current_file = line.strip().split(extension)[0] + extension
         print(current_file)
 
-        if extension in [".rc", ".lib", ".dll", ".exe"]:
+        if extension in [".rc", ".lib", ".dll", ".exe", ".txt", ".stamp", ".obj"]:
             print("Skipping extension " + extension)
             continue
 
